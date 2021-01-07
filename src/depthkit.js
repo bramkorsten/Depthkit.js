@@ -146,53 +146,97 @@ export default class DepthKit {
                 break;
         }
 
-        //Make sure to read the config file as json (i.e JSON.parse)
-        this.jsonLoader = new THREE.FileLoader(this.manager);
-        this.jsonLoader.setResponseType('json');
-        this.jsonLoader.load(_props,
-            // Function when json is loaded
-            data => {
-                this.props = data;
-                // console.log(this.props);
+        if (!this.IsJsonString) {
+            //Make sure to read the config file as json (i.e JSON.parse)
+            this.jsonLoader = new THREE.FileLoader(this.manager);
+            this.jsonLoader.setResponseType('json');
+            this.jsonLoader.load(_props,
+                // Function when json is loaded
+                data => {
+                    this.props = data;
+                    // console.log(this.props);
 
-                //Update the shader based on the properties from the JSON
-                this.material.uniforms.width.value = this.props.textureWidth;
-                this.material.uniforms.height.value = this.props.textureHeight;
-                this.material.uniforms.mindepth.value = this.props.nearClip;
-                this.material.uniforms.maxdepth.value = this.props.farClip;
-                this.material.uniforms.focalLength.value = this.props.depthFocalLength;
-                this.material.uniforms.principalPoint.value = this.props.depthPrincipalPoint;
-                this.material.uniforms.imageDimensions.value = this.props.depthImageSize;
-                this.material.uniforms.crop.value = this.props.crop;
+                    //Update the shader based on the properties from the JSON
+                    this.material.uniforms.width.value = this.props.textureWidth;
+                    this.material.uniforms.height.value = this.props.textureHeight;
+                    this.material.uniforms.mindepth.value = this.props.nearClip;
+                    this.material.uniforms.maxdepth.value = this.props.farClip;
+                    this.material.uniforms.focalLength.value = this.props.depthFocalLength;
+                    this.material.uniforms.principalPoint.value = this.props.depthPrincipalPoint;
+                    this.material.uniforms.imageDimensions.value = this.props.depthImageSize;
+                    this.material.uniforms.crop.value = this.props.crop;
 
-                let ex = this.props.extrinsics;
-                this.material.uniforms.extrinsics.value.set(
-                    ex["e00"], ex["e10"], ex["e20"], ex["e30"],
-                    ex["e01"], ex["e11"], ex["e21"], ex["e31"],
-                    ex["e02"], ex["e12"], ex["e22"], ex["e32"],
-                    ex["e03"], ex["e13"], ex["e23"], ex["e33"],
-                );
+                    let ex = this.props.extrinsics;
+                    this.material.uniforms.extrinsics.value.set(
+                        ex["e00"], ex["e10"], ex["e20"], ex["e30"],
+                        ex["e01"], ex["e11"], ex["e21"], ex["e31"],
+                        ex["e02"], ex["e12"], ex["e22"], ex["e32"],
+                        ex["e03"], ex["e13"], ex["e23"], ex["e33"],
+                    );
 
-                //Create the collider
-                let boxGeo = new THREE.BoxGeometry(this.props.boundsSize.x, this.props.boundsSize.y, this.props.boundsSize.z);
-                let boxMat = new THREE.MeshBasicMaterial(
-                    {
-                        color: 0xffff00,
-                        wireframe: true
-                    }
-                );
+                    //Create the collider
+                    let boxGeo = new THREE.BoxGeometry(this.props.boundsSize.x, this.props.boundsSize.y, this.props.boundsSize.z);
+                    let boxMat = new THREE.MeshBasicMaterial(
+                        {
+                            color: 0xffff00,
+                            wireframe: true
+                        }
+                    );
 
-                this.collider = new THREE.Mesh(boxGeo, boxMat);
+                    this.collider = new THREE.Mesh(boxGeo, boxMat);
 
 
-                this.collider.visible = false;
-                this.mesh.add(this.collider);
+                    this.collider.visible = false;
+                    this.mesh.add(this.collider);
 
-                //Temporary collider positioning fix - // TODO: fix that with this.props.boundsCenter
-                THREE.SceneUtils.detach(this.collider, this.mesh, this.mesh.parent);
-                this.collider.position.set(0,1,0);
-            }
-        );
+                    //Temporary collider positioning fix - // TODO: fix that with this.props.boundsCenter
+                    THREE.SceneUtils.detach(this.collider, this.mesh, this.mesh.parent);
+                    this.collider.position.set(0,1,0);
+                }
+            );
+        } else {
+            this.props = JSON.parse(_props);
+            // console.log(this.props);
+
+            //Update the shader based on the properties from the JSON
+            this.material.uniforms.width.value = this.props.textureWidth;
+            this.material.uniforms.height.value = this.props.textureHeight;
+            this.material.uniforms.mindepth.value = this.props.nearClip;
+            this.material.uniforms.maxdepth.value = this.props.farClip;
+            this.material.uniforms.focalLength.value = this.props.depthFocalLength;
+            this.material.uniforms.principalPoint.value = this.props.depthPrincipalPoint;
+            this.material.uniforms.imageDimensions.value = this.props.depthImageSize;
+            this.material.uniforms.crop.value = this.props.crop;
+
+            let ex = this.props.extrinsics;
+            this.material.uniforms.extrinsics.value.set(
+                ex["e00"], ex["e10"], ex["e20"], ex["e30"],
+                ex["e01"], ex["e11"], ex["e21"], ex["e31"],
+                ex["e02"], ex["e12"], ex["e22"], ex["e32"],
+                ex["e03"], ex["e13"], ex["e23"], ex["e33"],
+            );
+
+            //Create the collider
+            let boxGeo = new THREE.BoxGeometry(this.props.boundsSize.x, this.props.boundsSize.y, this.props.boundsSize.z);
+            let boxMat = new THREE.MeshBasicMaterial(
+                {
+                    color: 0xffff00,
+                    wireframe: true
+                }
+            );
+
+            this.collider = new THREE.Mesh(boxGeo, boxMat);
+
+
+            this.collider.visible = false;
+            this.mesh.add(this.collider);
+
+            //Temporary collider positioning fix - // TODO: fix that with this.props.boundsCenter
+            THREE.SceneUtils.detach(this.collider, this.mesh, this.mesh.parent);
+            this.collider.position.set(0,1,0);
+        }
+
+        
 
         //Make sure we don't hide the character - this helps the objects in webVR
         this.mesh.frustumCulled = false;
@@ -305,5 +349,14 @@ export default class DepthKit {
           }
         });
       }
+    }
+
+    IsJsonString(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
     }
 }
